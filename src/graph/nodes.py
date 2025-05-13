@@ -86,7 +86,25 @@ def background_investigation_node(state: State) -> Command[Literal["planner"]]:
                     for elem in searched_content
                 ]
                 logger.info(f"Found {len(background_investigation_results)} results from Tavily")
-                logger.debug(f"Search results: {json.dumps(background_investigation_results, indent=2)[:500]}...")
+                
+                # NEW: Limit content size to avoid token limit errors
+                MAX_CONTENT_LENGTH = 500  # characters per result
+                MAX_TOTAL_RESULTS = 3  # limit number of results
+                
+                # Truncate content and limit number of results
+                limited_results = []
+                for i, result in enumerate(background_investigation_results):
+                    if i >= MAX_TOTAL_RESULTS:
+                        break
+                    limited_result = {
+                        "title": result["title"],
+                        "content": result["content"][:MAX_CONTENT_LENGTH] + ("..." if len(result["content"]) > MAX_CONTENT_LENGTH else "")
+                    }
+                    limited_results.append(limited_result)
+                
+                background_investigation_results = limited_results
+                logger.info(f"Limited search results to {len(limited_results)} items with max {MAX_CONTENT_LENGTH} chars each")
+                logger.debug(f"Limited search results: {json.dumps(background_investigation_results, indent=2)}")
             else:
                 logger.error(
                     f"Tavily search returned malformed response: {searched_content}"
@@ -94,8 +112,31 @@ def background_investigation_node(state: State) -> Command[Literal["planner"]]:
         else:
             logger.info(f"Using {SELECTED_SEARCH_ENGINE} search")
             background_investigation_results = web_search_tool.invoke(query)
+            
+            # NEW: Same limitation for web search results
+            if background_investigation_results:
+                MAX_CONTENT_LENGTH = 500  # characters per result
+                MAX_TOTAL_RESULTS = 3  # limit number of results
+                
+                # If results is a list of dict objects
+                if isinstance(background_investigation_results, list):
+                    limited_results = []
+                    for i, result in enumerate(background_investigation_results):
+                        if i >= MAX_TOTAL_RESULTS:
+                            break
+                        if isinstance(result, dict) and "content" in result:
+                            result["content"] = result["content"][:MAX_CONTENT_LENGTH] + ("..." if len(result["content"]) > MAX_CONTENT_LENGTH else "")
+                        limited_results.append(result)
+                    background_investigation_results = limited_results
+                
+                # If results is a string, limit its length
+                elif isinstance(background_investigation_results, str):
+                    MAX_STRING_LENGTH = 1500
+                    background_investigation_results = background_investigation_results[:MAX_STRING_LENGTH] + ("..." if len(background_investigation_results) > MAX_STRING_LENGTH else "")
+                
+                logger.info(f"Limited web search results to prevent token limit errors")
+            
             logger.info(f"Web search completed with results")
-            logger.debug(f"Web search results: {json.dumps(background_investigation_results, indent=2)[:500]}...")
     except Exception as e:
         logger.error(f"Search failed with error: {str(e)}")
         import traceback
@@ -353,14 +394,20 @@ def coordinator_node(
         logger.debug(f"Coordinator response received: {response}")
 
         # Initialize defaults
-        goto = "__end__"
+        goto = "planner"  # Changed default to "planner" instead of "__end__"
         locale = state.get("locale", "en-US")
         logger.info(f"Initial locale: {locale}")
-
-        # Process tool calls
+        
+        # Detect language and set locale based on user input
+        user_input = state["messages"][-1].content
+        if any(char in user_input for char in "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"):
+            logger.info("Detected Russian language in user input")
+            locale = "ru-RU"
+        
+        # Process tool calls if they exist (for backward compatibility)
         if response.tool_calls:
             logger.info(f"Found {len(response.tool_calls)} tool calls in response")
-            goto = "planner"
+            
             if state.get("enable_background_investigation"):
                 logger.info("Background investigation enabled, adjusting path")
                 goto = "background_investigator"
@@ -381,7 +428,11 @@ def coordinator_node(
                 import traceback
                 logger.debug(f"Tool call processing error: {traceback.format_exc()}")
         else:
-            logger.warning("No tool calls found in coordinator response, ending workflow")
+            logger.info("No tool calls found, but proceeding to next step anyway")
+            # Always proceed to background investigation if enabled
+            if state.get("enable_background_investigation"):
+                logger.info("Background investigation enabled, adjusting path")
+                goto = "background_investigator"
             logger.debug(f"Coordinator response content: {response.content}")
 
         # Return command
