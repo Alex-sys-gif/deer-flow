@@ -2,25 +2,24 @@ import streamlit as st
 from src.workflow import run_agent_workflow_async
 import asyncio
 
-st.set_page_config(page_title="DeerFlow - AI Агент", layout="centered")
+st.set_page_config(page_title="DeerFlow - LMX AI Agent", layout="centered")
 
-# Заголовок приложения
-st.title("🦌 DeerFlow — Исследовательский агент")
-st.markdown("Введите запрос ниже:")
+# English UI
+st.title("🦌 DeerFlow - LMX Research AI Agent")
+st.markdown("Enter your query below:")
 
-# Поля ввода параметров
-user_query = st.text_input("Ваш запрос:", placeholder="Например: Как работает LLM?")
-debug_mode = st.checkbox("Режим отладки")
-enable_background_investigation = st.checkbox("Фоновое исследование (поиск в интернете)", value=True)
+# Input fields
+user_query = st.text_input("Your question:", placeholder="E.g., How does Llama3 work?")
+debug_mode = st.checkbox("Enable debug mode")
+enable_background_investigation = st.checkbox("Enable background investigation (web search)", value=True)
 
-max_plan_iterations = st.slider("Максимум итераций плана", min_value=1, max_value=20, value=5)
-max_step_num = st.slider("Максимум шагов в каждом плане", min_value=1, max_value=50, value=10)
+max_plan_iterations = st.slider("Max plan iterations", 1, 20, 5)
+max_step_num = st.slider("Max steps per plan", 1, 50, 10)
 
-# Кнопка запуска агента
-if st.button("🚀 Запустить агента"):
+# Run agent button
+if st.button("🚀 Run Agent"):
     if user_query.strip():
-        with st.spinner("Агент думает..."):
-            # Вызов асинхронной функции
+        with st.spinner("Agent is thinking... This may take a few seconds."):
             result = asyncio.run(run_agent_workflow_async(
                 user_input=user_query,
                 debug=debug_mode,
@@ -28,7 +27,7 @@ if st.button("🚀 Запустить агента"):
                 max_step_num=max_step_num,
                 enable_background_investigation=enable_background_investigation
             ))
-            st.success("✅ Результат:")
+            st.success("✅ Result:")
             st.markdown(result)
     else:
-        st.warning("⚠️ Пожалуйста, введите запрос перед запуском.")
+        st.warning("⚠️ Please enter a query before running the agent.")
