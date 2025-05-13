@@ -6,3 +6,4 @@ python-dotenv
 serpapi
 openai
 InquirerPy
+langchain_mcp_adapters
