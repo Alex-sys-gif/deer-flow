@@ -1,0 +1,20 @@
+version: 2
+databaseImage: false
+
+services:
+  - type: web
+    name: deerflow
+    env: python
+    buildCommand: |
+      # Установка Ollama
+      curl -fsSL https://ollama.com/install.sh  | sh
+      # Установка зависимостей Python
+      pip install -r requirements.txt
+    startCommand: |
+      # Запуск Ollama в фоне
+      ollama serve &
+      # Загрузка модели Llama3 (можно заменить на другую)
+      ollama pull llama3
+      # Запуск Streamlit
+      streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+    plan: free
