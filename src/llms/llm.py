@@ -13,19 +13,15 @@ from src.config.agents import LLMType
 _llm_cache: dict[LLMType, ChatOpenAI] = {}
 
 
-def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatOpenAI:
-    llm_type_map = {
-        "reasoning": conf.get("REASONING_MODEL"),
-        "basic": conf.get("BASIC_MODEL"),
-        "vision": conf.get("VISION_MODEL"),
-    }
-    llm_conf = llm_type_map.get(llm_type)
-    if not llm_conf:
+def _create_llm_use_conf(llm_type, conf):
+    if llm_type == "basic":
+        from langchain_groq import ChatGroq
+        return ChatGroq(model=conf.get("model", "llama3-8b-70b"), api_key=conf.get("api_key"))
+    elif llm_type == "groq":
+        from langchain_groq import ChatGroq
+        return ChatGroq(**conf)
+    else:
         raise ValueError(f"Unknown LLM type: {llm_type}")
-    if not isinstance(llm_conf, dict):
-        raise ValueError(f"Invalid LLM Conf: {llm_type}")
-    return ChatOpenAI(**llm_conf)
-
 
 def get_llm_by_type(
     llm_type: LLMType,
