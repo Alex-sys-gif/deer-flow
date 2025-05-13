@@ -51,6 +51,7 @@ rpds-py>=0.7.1
 fastapi>=0.110.0
 uvicorn>=0.27.1
 sse-starlette>=1.6.5
+nest_asyncio
 
 # Extras
 tqdm>4
