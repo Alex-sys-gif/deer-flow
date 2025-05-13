@@ -8,7 +8,6 @@ openai
 InquirerPy
 langchain_mcp_adapters
 markdownify
-readabilipy
 beautifulsoup4
 lxml
 pydantic
@@ -56,3 +55,4 @@ langgraph-sdk
 langgraph-checkpoint
 langchain-text-splitters
 langchain-core
+readabilipy
