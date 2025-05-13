@@ -4,5 +4,4 @@ langgraph
 requests
 python-dotenv
 serpapi
-tavily
 openai
