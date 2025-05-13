@@ -11,6 +11,7 @@ langchain-experimental>=0.3.4
 langchain-openai>=0.3.8
 langchain-mcp-adapters>=0.0.9
 langchain-core>=0.3.58
+langchain-groq
 langgraph>=0.4.3
 langgraph-checkpoint>=2.0.25
 langgraph-prebuilt>=0.1.8
