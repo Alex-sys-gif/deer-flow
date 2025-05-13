@@ -16,7 +16,7 @@ _llm_cache: dict[LLMType, ChatOpenAI] = {}
 def _create_llm_use_conf(llm_type, conf):
     if llm_type == "basic":
         from langchain_groq import ChatGroq
-        return ChatGroq(model=conf.get("model", "llama3-8b-70b"), api_key=conf.get("api_key"))
+        return ChatGroq(model=conf.get("model", "llama3-8b-8192"), api_key=conf.get("api_key"))
     elif llm_type == "groq":
         from langchain_groq import ChatGroq
         return ChatGroq(**conf)
