@@ -6,15 +6,25 @@ services:
     name: deerflow
     env: python
     buildCommand: |
-      # Установка Ollama
-      curl -fsSL https://ollama.com/install.sh  | sh
       # Установка зависимостей Python
       pip install -r requirements.txt
+
+      # Скачивание ollama вручную
+      wget https://ollama.ai/download/ollama-linux-amd64.tgz 
+      tar -xzf ollama-linux-amd64.tgz
+      mv ollama ollama-bin
+
     startCommand: |
       # Запуск Ollama в фоне
-      ollama serve &
-      # Загрузка модели Llama3 (можно заменить на другую)
-      ollama pull llama3
-      # Запуск Streamlit
+      ./ollama-bin serve &
+
+      # Ожидание запуска сервера Ollama
+      sleep 10
+
+      # Загрузка модели Llama3
+      echo "Загрузка модели Llama3..."
+      ./ollama-bin pull llama3
+
+      # Запуск Streamlit приложения
       streamlit run app.py --server.port $PORT --server.address 0.0.0.0
     plan: free
