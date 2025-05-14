@@ -84,18 +84,10 @@ async def run_agent_workflow_async(
             "max_plan_iterations": max_plan_iterations,
             "max_step_num": max_step_num,
             "mcp_settings": {
-                "servers": {
-                    "mcp-github-trending": {
-                        "transport": "stdio",
-                        "command": "uvx",
-                        "args": ["mcp-github-trending"],
-                        "enabled_tools": ["get_github_trending_repositories"],
-                        "add_to_agents": ["researcher"],
-                    }
-                }
+                "servers": {}  # Очищаем серверы MCP, чтобы отключить использование uvx
             },
         },
-        "recursion_limit": 100,
+        "recursion_limit": 200,  # Также увеличиваем лимит рекурсии для надежности
     }
     logger.info("Starting graph execution with configuration")
     logger.debug(f"Full configuration: {json.dumps(config, indent=2)}")
