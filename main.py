@@ -105,7 +105,18 @@ else:
                         st.success("✅ Answer:")
                         
                         def extract_content(data):
-                            # Extract content from various data formats
+                            # Если это объект AIMessage или другое сообщение langchain
+                            if hasattr(data, 'content'):
+                                return data.content
+                            
+                            # Если строка представляет собой объект с content
+                            if isinstance(data, str) and "content=" in data and "additional_kwargs" in data:
+                                # Извлекаем содержимое между 'content=' и первым ' additional_kwargs'
+                                match = re.search(r"content='([^']*)'", data)
+                                if match:
+                                    return match.group(1)
+                            
+                            # Остальная логика извлечения остается без изменений
                             if isinstance(data, dict):
                                 if "content" in data:
                                     return data["content"]
