@@ -36,12 +36,30 @@ if st.button("Run agent"):
                         # Если это словарь, ищем поле content
                         if isinstance(data, dict):
                             if "content" in data:
+                                # Проверяем, является ли content строкой в формате JSON
+                                try:
+                                    content_json = json.loads(data["content"])
+                                    if isinstance(content_json, dict) and "thought" in content_json:
+                                        return content_json["thought"]
+                                except:
+                                    pass
                                 return data["content"]
                             elif "thought" in data:
                                 return data["thought"]
                         
                         # Если это строка
                         if isinstance(data, str):
+                            # Проверяем, является ли это строкой в формате JSON
+                            try:
+                                json_data = json.loads(data)
+                                if isinstance(json_data, dict):
+                                    if "thought" in json_data:
+                                        return json_data["thought"]
+                                    elif "content" in json_data:
+                                        return json_data["content"]
+                            except:
+                                pass
+                                
                             # Пытаемся извлечь JSON из строки
                             content_match = re.search(r'"content":\s*"([^"]+)"', data)
                             if content_match:
