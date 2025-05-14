@@ -3,6 +3,7 @@ from src.workflow import run_agent_workflow_async
 import asyncio
 import nest_asyncio
 import json
+import re
 
 # Apply asyncio patch for Streamlit
 nest_asyncio.apply()
@@ -30,24 +31,52 @@ if st.button("Run agent"):
                 else:
                     st.success("✅ Answer:")
                     
+                    # Функция для извлечения содержимого из сложного ответа
+                    def extract_content(data):
+                        # Если это словарь, ищем поле content
+                        if isinstance(data, dict):
+                            if "content" in data:
+                                return data["content"]
+                            elif "thought" in data:
+                                return data["thought"]
+                        
+                        # Если это строка
+                        if isinstance(data, str):
+                            # Пытаемся извлечь JSON из строки
+                            content_match = re.search(r'"content":\s*"([^"]+)"', data)
+                            if content_match:
+                                return content_match.group(1)
+                            
+                            # Пытаемся извлечь thought из строки
+                            thought_match = re.search(r'"thought":\s*"([^"]+)"', data)
+                            if thought_match:
+                                return thought_match.group(1)
+                            
+                            # Возвращаем строку как есть, если нет специальных полей
+                            return data
+                        
+                        # Для других типов данных
+                        return str(data)
+                    
                     # Проверка структуры ответа
                     if isinstance(result, dict):
                         # Вариант 1: Использовать последнее сообщение из списка messages
                         if "messages" in result and result["messages"]:
                             last_message = result["messages"][-1]
-                            if isinstance(last_message, dict) and "content" in last_message:
-                                st.markdown(last_message["content"])
-                            else:
-                                st.markdown(str(last_message))
+                            content = extract_content(last_message)
+                            st.markdown(content)
                         # Вариант 2: Использовать поле response если оно есть
                         elif "response" in result:
-                            st.markdown(result["response"])
+                            content = extract_content(result["response"])
+                            st.markdown(content)
                         # Вариант 3: Показать полный результат, если структура неизвестна
                         else:
+                            st.info("Raw response format:")
                             st.json(result)
                     else:
                         # Если результат не словарь, показываем как есть
-                        st.markdown(str(result))
+                        content = extract_content(result)
+                        st.markdown(content)
                     
                     # В режиме отладки показываем полный ответ
                     if debug_mode:
