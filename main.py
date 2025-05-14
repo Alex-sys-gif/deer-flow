@@ -3,29 +3,29 @@ from src.workflow import run_agent_workflow_async
 import asyncio
 import nest_asyncio
 
-# Применяем патч для asyncio в Streamlit
+# Apply asyncio patch for Streamlit
 nest_asyncio.apply()
 
-st.title("DeerFlow - AI Агент")
-st.markdown("Введите запрос ниже:")
+st.title("LMX AI Agent")
+st.markdown("Enter your query below:")
 
-user_query = st.text_input("Ваш запрос", placeholder="Например: Как работает LLM?")
-debug_mode = st.checkbox("Режим отладки")
-enable_background_investigation = st.checkbox("Фоновое исследование", value=True)
+user_query = st.text_input("Your query", placeholder="For example: How does LLM work?")
+debug_mode = st.checkbox("Debug mode")
+enable_background_investigation = st.checkbox("Background investigation", value=True)
 
-if st.button("Запустить агента"):
+if st.button("Run agent"):
     if user_query.strip():
-        with st.spinner("Агент думает..."):
-            # Запуск асинхронной функции через asyncio.run
+        with st.spinner("Agent is thinking..."):
+            # Run async function through asyncio.run
             result = asyncio.run(run_agent_workflow_async(
                 user_input=user_query,
                 debug=debug_mode,
                 enable_background_investigation=enable_background_investigation
             ))
             if result is None:
-                st.error("⚠️ Агент вернул пустой результат. Попробуйте другой запрос.")
+                st.error("⚠️ Agent returned empty result. Try another query.")
             else:
-                st.success("✅ Ответ:")
+                st.success("✅ Answer:")
                 st.markdown(result)
     else:
-        st.warning("⚠️ Введите запрос перед запуском.")
+        st.warning("⚠️ Enter a query before running.")

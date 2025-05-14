@@ -5,16 +5,10 @@ services:
   - type: web
     name: deerflow
     env: python
-  startCommand: |
-  # Запуск Ollama в фоне
-  ollama serve &
-
-  # Ожидание запуска сервера Ollama
-  sleep 10
-
-  # Загрузка модели Llama3
-  ollama pull llama3
-
-  # Запуск Streamlit
-  streamlit run main.py --server.port $PORT --server.address 0.0.0.0
+    branch: main  # Автоматический деплой при пуше в main
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run main.py --server.port $PORT --server.address 0.0.0.0
     plan: free
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
