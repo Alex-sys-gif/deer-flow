@@ -12,42 +12,51 @@ st.markdown("Enter your query below:")
 
 user_query = st.text_input("Your query", placeholder="For example: How does LLM work?")
 debug_mode = st.checkbox("Debug mode")
-enable_background_investigation = st.checkbox("Background investigation", value=True)
+enable_background_investigation = st.checkbox("Background investigation", value=False)  # Отключаем по умолчанию для отладки
 
 if st.button("Run agent"):
     if user_query.strip():
         with st.spinner("Agent is thinking..."):
-            # Run async function through asyncio.run
-            result = asyncio.run(run_agent_workflow_async(
-                user_input=user_query,
-                debug=debug_mode,
-                enable_background_investigation=enable_background_investigation
-            ))
-            if result is None:
-                st.error("⚠️ Agent returned empty result. Try another query.")
-            else:
-                st.success("✅ Answer:")
+            try:
+                # Run async function through asyncio.run
+                result = asyncio.run(run_agent_workflow_async(
+                    user_input=user_query,
+                    debug=debug_mode,
+                    enable_background_investigation=enable_background_investigation
+                ))
                 
-                # Если результат - это словарь или строка в формате JSON
-                if isinstance(result, dict):
-                    # Если есть поле 'response_metadata', извлекаем ответ
-                    if "messages" in result and len(result["messages"]) > 0:
-                        # Получаем ответ из первого сообщения
-                        if isinstance(result["messages"][-1], dict) and "content" in result["messages"][-1]:
-                            st.markdown(result["messages"][-1]["content"])
-                        else:
-                            st.markdown(str(result["messages"][-1]))
-                    # Если есть поле background_investigation_results, показываем его отдельно
-                    if debug_mode and "background_investigation_results" in result:
-                        with st.expander("Background Investigation Results"):
-                            st.json(result["background_investigation_results"])
+                if result is None:
+                    st.error("⚠️ Agent returned empty result. Try another query.")
                 else:
-                    # Если результат - просто строка
-                    st.markdown(result)
+                    st.success("✅ Answer:")
                     
-                # Если включен режим отладки, показываем полный результат
+                    # Проверка структуры ответа
+                    if isinstance(result, dict):
+                        # Вариант 1: Использовать последнее сообщение из списка messages
+                        if "messages" in result and result["messages"]:
+                            last_message = result["messages"][-1]
+                            if isinstance(last_message, dict) and "content" in last_message:
+                                st.markdown(last_message["content"])
+                            else:
+                                st.markdown(str(last_message))
+                        # Вариант 2: Использовать поле response если оно есть
+                        elif "response" in result:
+                            st.markdown(result["response"])
+                        # Вариант 3: Показать полный результат, если структура неизвестна
+                        else:
+                            st.json(result)
+                    else:
+                        # Если результат не словарь, показываем как есть
+                        st.markdown(str(result))
+                    
+                    # В режиме отладки показываем полный ответ
+                    if debug_mode:
+                        with st.expander("Debug Response"):
+                            st.json(result)
+            
+            except Exception as e:
+                st.error(f"⚠️ Error: {str(e)}")
                 if debug_mode:
-                    with st.expander("Debug: Raw Response"):
-                        st.json(result)
+                    st.exception(e)
     else:
         st.warning("⚠️ Enter a query before running.")
